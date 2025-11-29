@@ -1,6 +1,21 @@
+"use client"; // Obrigatório para usar useEffect
 import Image from "next/image";
+import { useRouter } from "next/navigation"; // Note que é next/navigation, não next/router
+import { useEffect } from "react";
 
 export default function SplashScreen() {
+  const router = useRouter();
+  
+  useEffect(() => {
+    // Redireciona para /login após 3 segundos (3000ms)
+    const timer = setTimeout(() => {
+      router.push("/login");
+    }, 3000);
+
+    // Limpa o timer se o usuário sair da tela antes (boa prática)
+    return () => clearTimeout(timer);
+  }, [router]);
+  
   return (
     // 'bg-splash-bg' funciona porque definimos --color-splash-bg no globals.css
     <main className="min-h-screen w-full bg-splash-bg flex items-center justify-center p-4">
