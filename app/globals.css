@@ -4,6 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-splash-bg: var(--splash-bg);
+  --color-brand-dark: var(--brand-dark);
+  
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -44,6 +47,9 @@
 }
 
 :root {
+  --splash-bg: #E3E9F0;
+  --brand-dark: #0F172A;
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
