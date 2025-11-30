@@ -21,9 +21,11 @@ export default function HomePage() {
         <div className="flex items-center gap-3">
 
           {/* Botão Menu (Hambúrguer) */}
-          <button className="h-12 w-12 bg-white rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-transform">
-            <Menu className="h-6 w-6 text-brand-dark" />
-          </button>
+          <Link href="/perfil">
+            <button className="h-12 w-12 bg-white rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-transform">
+              <Menu className="h-6 w-6 text-brand-dark" />
+            </button>
+          </Link>
 
           {/* Barra de Pesquisa */}
           <div className="flex-1 relative">
@@ -81,6 +83,6 @@ export default function HomePage() {
         </Link>
 
       </div>
-    </main>
-  );
+    </main>
+  );
 }
