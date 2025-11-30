@@ -19,7 +19,7 @@ const getMockData = (id: string) => {
     description: "Poste quebrado na rua prejudicando a segurança dos cidadãos.",
     // Coloquei uma imagem de placeholder genérica. 
     // Se tiver a foto real do poste, coloque em /public e mude este caminho.
-    imageUrl: "https://placehold.co/600x600/png?text=Foto+do+Local", 
+    imageUrl: "", 
   };
 };
 
