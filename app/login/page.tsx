@@ -23,8 +23,8 @@ export default function LoginPage() {
                 <Image
                     src="/alerta-urbano.png"
                     alt="Alerta Urbano"
-                    width={120}
-                    height={120}
+                    width={200}
+                    height={200}
                     className="object-contain drop-shadow-sm mb-2"
                 />
                 {/* O texto do logo já está na imagem, mas se precisar de reforço visual: */}
