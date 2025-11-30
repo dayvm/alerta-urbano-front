@@ -62,13 +62,14 @@ export default function HomePage() {
         </h2>
 
         {/* Lista de Reports (Card #1) */}
-        <div className="w-full bg-brand-dark rounded-2xl p-4 flex items-center gap-4 shadow-md text-white">
-          <div className="h-10 w-10 border-2 border-white rounded-lg flex items-center justify-center">
-            <User className="h-6 w-6 text-white" />
-            {/* O ícone de exclamação pequeno seria um elemento extra, simplifiquei com o User por enquanto */}
+        <Link href="/report/1" className="w-full">
+          <div className="w-full bg-brand-dark rounded-2xl p-4 flex items-center gap-4 shadow-md text-white hover:bg-slate-800 transition-colors cursor-pointer">
+            <div className="h-10 w-10 border-2 border-white rounded-lg flex items-center justify-center">
+              <User className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-lg font-medium">Report #1</span>
           </div>
-          <span className="text-lg font-medium">Report #1</span>
-        </div>
+        </Link>
 
         {/* Botão de Ação Principal (Turquesa) */}
         <Link href="/novo-report" className="w-full mt-2">
@@ -80,6 +81,6 @@ export default function HomePage() {
         </Link>
 
       </div>
-    </main>
-  );
+    </main>
+  );
 }
