@@ -22,9 +22,9 @@ export default function ProfilePage() {
 
         {/* Info do Usuário Centralizada */}
         <div className="flex flex-col items-center gap-3 relative z-10">
-          <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
+          <Avatar className="h-34 w-34 border-4 border-white shadow-xl">
             {/* Foto mockada - troque pela URL real depois */}
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarImage src="/fotoperfil.jpg" alt="@shadcn" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <div className="text-center">
