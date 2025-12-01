@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 export default function ProfilePage() {
   return (
     <main className="min-h-screen w-full bg-splash-bg flex flex-col">
-      
+
       {/* 1. Header (Aumentei o padding-bottom para dar mais espaço) */}
       <div className="w-full bg-brand-dark pb-24 pt-6 px-6 rounded-b-[3rem] shadow-lg relative">
         <div className="flex justify-between items-center mb-6">
@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
       {/* 3. Menu de Opções */}
       <div className="flex-1 px-6 pb-8 space-y-2">
-        
+
         {/* Item: Meus Dados */}
         <button className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-sm active:scale-95 transition-transform">
           <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
@@ -58,12 +58,14 @@ export default function ProfilePage() {
         </button>
 
         {/* Item: Histórico */}
-        <button className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-sm active:scale-95 transition-transform">
-          <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
-            <History className="h-5 w-5" />
-          </div>
-          <span className="text-gray-700 font-bold flex-1 text-left">Histórico de Reports</span>
-        </button>
+        <Link href="/historico" className="w-full">
+          <button className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-sm active:scale-95 transition-transform">
+            <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+              <History className="h-5 w-5" />
+            </div>
+            <span className="text-gray-700 font-bold flex-1 text-left">Histórico de Reports</span>
+          </button>
+        </Link>
 
         {/* Item: Endereços Salvos */}
         <button className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-sm active:scale-95 transition-transform">
@@ -79,8 +81,8 @@ export default function ProfilePage() {
             <Shield className="h-5 w-5" />
           </div>
           <div className="flex flex-col text-left flex-1">
-             <span className="text-gray-700 font-bold">Área do Gestor</span>
-             <span className="text-xs text-gray-400">Acesso restrito</span>
+            <span className="text-gray-700 font-bold">Área do Gestor</span>
+            <span className="text-xs text-gray-400">Acesso restrito</span>
           </div>
         </button>
 
@@ -95,6 +97,6 @@ export default function ProfilePage() {
         </Link>
 
       </div>
-    </main>
-  );
+    </main>
+  );
 }
