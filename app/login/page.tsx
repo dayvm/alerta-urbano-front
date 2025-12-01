@@ -13,6 +13,10 @@ export default function LoginPage() {
     const router = useRouter();
     const login = useAuthStore((state) => state.login); // Pega a ação da Store
 
+    // --- ADICIONE ISTO PARA TESTE ---
+    console.log("🔍 URL da API no Vercel:", process.env.NEXT_PUBLIC_API_URL);
+    // -------------------------------
+
     // Estados locais
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
