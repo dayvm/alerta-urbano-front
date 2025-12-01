@@ -1,12 +1,76 @@
 "use client";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { authService } from "@/services/auth";
+// --- ADICIONE ESTES IMPORTS ---
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
 
 export default function RegisterPage() {
     const router = useRouter();
+
+    const [formData, setFormData] = useState({
+        nome: "",
+        email: "",
+        senha: "",
+        confirmarSenha: "",
+        profileType: "CITIZEN" // Valor padrão
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    // Função específica para o Select do Shadcn
+    const handleSelectChange = (value: string) => {
+        setFormData({ ...formData, profileType: value });
+    };
+
+    const handleRegister = async () => {
+        setError("");
+        setLoading(true);
+
+        if (formData.senha !== formData.confirmarSenha) {
+            setError("As senhas não coincidem.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const payload = {
+                name: formData.nome,
+                email: formData.email,
+                password: formData.senha,
+                profileType: formData.profileType // <--- AGORA É DINÂMICO
+            };
+
+            console.log("Cadastrando como:", payload.profileType);
+
+            await authService.register(payload);
+
+            alert(`Cadastro de ${payload.profileType} realizado!`);
+            router.push("/login");
+        } catch (err: any) {
+            console.error(err);
+            const msg = err.response?.data || "Erro ao realizar cadastro.";
+            setError(typeof msg === 'string' ? msg : "Erro ao conectar com servidor.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <main className="min-h-screen w-full bg-splash-bg flex flex-col items-center justify-center p-6 sm:p-8">
@@ -28,11 +92,21 @@ export default function RegisterPage() {
                 <h3 className="text-lg font-bold text-brand-dark">Vamos começar?</h3>
             </div>
 
+            {/* --- BLOCO DE ERRO --- */}
+            {error && (
+                <div className="mb-4 p-3 w-full max-w-sm bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm text-center">
+                    {error}
+                </div>
+            )}
+
             {/* 3. Formulário de Cadastro */}
             <div className="w-full max-w-sm space-y-4">
 
                 {/* Input Nome */}
                 <Input
+                    name="nome" // Importante para o handleChange
+                    value={formData.nome}
+                    onChange={handleChange}
                     type="text"
                     placeholder="Nome"
                     className="h-12 rounded-full bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400 focus-visible:ring-brand-dark/20 px-6"
@@ -40,6 +114,9 @@ export default function RegisterPage() {
 
                 {/* Input E-mail */}
                 <Input
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     type="email"
                     placeholder="E-mail"
                     className="h-12 rounded-full bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400 focus-visible:ring-brand-dark/20 px-6"
@@ -47,6 +124,9 @@ export default function RegisterPage() {
 
                 {/* Input Senha */}
                 <Input
+                    name="senha"
+                    value={formData.senha}
+                    onChange={handleChange}
                     type="password"
                     placeholder="Senha"
                     className="h-12 rounded-full bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400 focus-visible:ring-brand-dark/20 px-6"
@@ -54,17 +134,37 @@ export default function RegisterPage() {
 
                 {/* Input Confirmar Senha */}
                 <Input
+                    name="confirmarSenha"
+                    value={formData.confirmarSenha}
+                    onChange={handleChange}
                     type="password"
                     placeholder="Confirmar senha"
                     className="h-12 rounded-full bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400 focus-visible:ring-brand-dark/20 px-6"
                 />
 
+                {/* --- NOVO CAMPO DE SELEÇÃO DE PERFIL --- */}
+                <div className="pt-2">
+                    <label className="text-xs text-gray-500 ml-4 font-bold uppercase">Tipo de Perfil (Demo)</label>
+                    <Select onValueChange={handleSelectChange} defaultValue="CITIZEN">
+                        <SelectTrigger className="h-12 w-full rounded-full bg-white border-0 shadow-sm text-gray-700 px-6 focus:ring-brand-dark/20">
+                            <SelectValue placeholder="Selecione o perfil" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="CITIZEN">Cidadão (Padrão)</SelectItem>
+                            <SelectItem value="MANAGER">Gestor (Empresa/Órgão)</SelectItem>
+                            <SelectItem value="ADMIN">Administrador</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                {/* --------------------------------------- */}
+
                 {/* Botão Cadastrar */}
                 <Button
-                    onClick={() => router.push('/home')}
-                    className="w-full h-12 rounded-full bg-brand-dark hover:bg-slate-800 text-white font-bold text-lg shadow-md mt-6 transition-all active:scale-95"
+                    onClick={handleRegister}
+                    disabled={loading}
+                    className="w-full h-12 rounded-full bg-brand-dark hover:bg-slate-800 text-white font-bold text-lg shadow-md mt-6 transition-all active:scale-95 disabled:opacity-70"
                 >
-                    Cadastrar
+                    {loading ? <Loader2 className="animate-spin" /> : "Cadastrar"}
                 </Button>
             </div>
 
