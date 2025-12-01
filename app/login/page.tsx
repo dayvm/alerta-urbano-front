@@ -1,18 +1,44 @@
-"use client"; // <--- ADICIONADO: Necessário para interatividade
+"use client";
+import { useState } from "react"; // <--- ADICIONADO
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock } from "lucide-react"; // Ícones do shadcn/lucide
+import { Mail, Lock, Loader2 } from "lucide-react"; // <--- ADICIONADO Loader2
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { authService } from "@/services/auth"; // <--- ADICIONADO
+import { useAuthStore } from "@/store/auth-store"; // <--- ADICIONADO
 
 export default function LoginPage() {
-    const router = useRouter(); // <--- Hook de navegação
+    const router = useRouter();
+    const login = useAuthStore((state) => state.login); // Pega a ação da Store
 
-    const handleLogin = () => {
-        // Aqui viria a lógica real de autenticação
-        // Por enquanto, apenas redireciona
-        router.push("/home");
+    // Estados locais
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const handleLogin = async () => {
+        setError("");
+        setLoading(true);
+
+        try {
+            // Chama o serviço (Axios)
+            const data = await authService.login({ email, password }); // (ou 'senha', confira seu DTO)
+
+            // Salva no Zustand (Estado Global)
+            login(data.token, data.usuario); // (ou 'data.user', confira o retorno da API)
+
+            // Redireciona
+            router.push("/home");
+        } catch (err: any) {
+            console.error(err);
+            // Tratamento de erro simples
+            setError("E-mail ou senha inválidos.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -46,6 +72,8 @@ export default function LoginPage() {
                     <Input
                         type="email"
                         placeholder="Digite seu E-mail"
+                        value={email} // <--- ADICIONADO
+                        onChange={(e) => setEmail(e.target.value)} // <--- ADICIONADO
                         className="pl-12 h-12 rounded-full bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400 focus-visible:ring-brand-dark/20"
                     />
                 </div>
@@ -56,6 +84,8 @@ export default function LoginPage() {
                     <Input
                         type="password"
                         placeholder="Digite sua senha"
+                        value={password} // <--- ADICIONADO
+                        onChange={(e) => setPassword(e.target.value)} // <--- ADICIONADO
                         className="pl-12 h-12 rounded-full bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400 focus-visible:ring-brand-dark/20"
                     />
                 </div>
@@ -73,9 +103,16 @@ export default function LoginPage() {
                 {/* Botão Entrar */}
                 <Button
                     onClick={handleLogin}
+                    disabled={loading} // <--- ADICIONADO
                     className="w-full h-12 rounded-full bg-brand-dark hover:bg-slate-800 text-white font-bold text-lg shadow-md mt-4 transition-all active:scale-95"
                 >
-                    Entrar
+                    {loading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...
+                        </>
+                    ) : (
+                        "Entrar"
+                    )}
                 </Button>
             </div>
 
