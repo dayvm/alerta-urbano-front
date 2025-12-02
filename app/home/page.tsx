@@ -1,5 +1,3 @@
-// home/page.tsx
-
 "use client";
 
 import dynamic from "next/dynamic";
@@ -41,16 +39,16 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* 2. Área do Mapa Expandida */}
+      {/* 2. Área do Conteúdo */}
       <div className="w-full flex-1 px-4 mt-4 pb-4 z-10 flex flex-col relative">
         
-        {/* Container do Mapa (Ocupa o resto da tela praticamente) */}
-        <div className="w-full h-[70vh] bg-white rounded-2xl shadow-xl p-1 relative">
+        {/* Container do Mapa com ALTURA FIXA (Fundamental para o Leaflet) */}
+        <div className="w-full h-[70vh] bg-white rounded-2xl shadow-xl p-1 relative overflow-hidden">
           <MapView />
         </div>
 
-        {/* 3. Card de Instrução Flutuante (Sobreposto na parte inferior) */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-sm pointer-events-none">
+        {/* 3. Card de Instrução Flutuante */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-sm pointer-events-none z-[400]">
           <div className="bg-[#1abeb3] text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 duration-700">
             <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
               <MapPin className="h-6 w-6 text-white" fill="currentColor" />
@@ -65,6 +63,6 @@ export default function HomePage() {
         </div>
 
       </div>
-    </main>
-  );
+    </main>
+  );
 }
