@@ -4,9 +4,11 @@ import { persist, createJSONStorage } from "zustand/middleware";
 // 1. Tipagem do Usuário (Igual ao DTO do Java)
 export interface User {
   id?: number;
-  nome: string;
+  name: string;
   email: string;
-  role?: string; // "CIDADAO" | "GESTOR"
+  profileType: string; // "CIDADAO" | "GESTOR"
+  institutionId?: number;
+  institutionName?: string;
 }
 
 // 2. Tipagem do Estado

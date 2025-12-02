@@ -10,7 +10,7 @@ interface LoginRequest {
 // Tipagem do que o Java devolve
 interface LoginResponse {
   token: string;
-  usuario: User; // Ou 'user', verifique como está no seu UserDTO do Java
+  user: User; // Ou 'user', verifique como está no seu UserDTO do Java
 }
 
 export const authService = {

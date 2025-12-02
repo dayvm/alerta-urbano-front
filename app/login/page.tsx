@@ -32,7 +32,7 @@ export default function LoginPage() {
             const data = await authService.login({ email, password }); // (ou 'senha', confira seu DTO)
 
             // Salva no Zustand (Estado Global)
-            login(data.token, data.usuario); // (ou 'data.user', confira o retorno da API)
+            login(data.token, data.user); // (ou 'data.user', confira o retorno da API)
 
             // Redireciona
             router.push("/home");
