@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { authService } from "@/services/auth";
-// --- ADICIONE ESTES IMPORTS ---
+import { useInstitutions } from "@/hooks/use-institutions"; // Hook do Tanstack Query
 import {
     Select,
     SelectContent,
@@ -16,17 +17,21 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-
 export default function RegisterPage() {
     const router = useRouter();
+
+    // 1. Busca as instituições do Backend (Cacheado pelo Tanstack Query)
+    const { data: institutions = [], isLoading: isLoadingInst } = useInstitutions();
 
     const [formData, setFormData] = useState({
         nome: "",
         email: "",
         senha: "",
         confirmarSenha: "",
-        profileType: "CITIZEN" // Valor padrão
+        profileType: "CITIZEN", // Valor padrão
+        institutionId: ""       // Novo campo para o ID da instituição
     });
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -34,9 +39,14 @@ export default function RegisterPage() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Função específica para o Select do Shadcn
-    const handleSelectChange = (value: string) => {
+    // Função para o Select de Perfil
+    const handleProfileChange = (value: string) => {
         setFormData({ ...formData, profileType: value });
+    };
+
+    // Função para o Select de Instituição
+    const handleInstitutionChange = (value: string) => {
+        setFormData({ ...formData, institutionId: value });
     };
 
     const handleRegister = async () => {
@@ -50,18 +60,23 @@ export default function RegisterPage() {
         }
 
         try {
+            // 2. Monta o Payload para enviar ao Java
             const payload = {
-                name: formData.nome,
-                email: formData.email,
-                password: formData.senha,
-                profileType: formData.profileType // <--- AGORA É DINÂMICO
+                name: formData.nome,       // Java espera "name"
+                email: formData.email,     // Java espera "email"
+                password: formData.senha,  // Java espera "password"
+                profileType: formData.profileType, // Java espera "profileType"
+                // Envia institutionId apenas se for MANAGER
+                institutionId: (formData.profileType === "MANAGER" && formData.institutionId)
+                    ? formData.institutionId
+                    : null
             };
 
-            console.log("Cadastrando como:", payload.profileType);
+            console.log("Enviando Payload:", payload);
 
             await authService.register(payload);
 
-            alert(`Cadastro de ${payload.profileType} realizado!`);
+            alert(`Cadastro realizado com sucesso!`);
             router.push("/login");
         } catch (err: any) {
             console.error(err);
@@ -104,7 +119,7 @@ export default function RegisterPage() {
 
                 {/* Input Nome */}
                 <Input
-                    name="nome" // Importante para o handleChange
+                    name="nome"
                     value={formData.nome}
                     onChange={handleChange}
                     type="text"
@@ -142,10 +157,10 @@ export default function RegisterPage() {
                     className="h-12 rounded-full bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400 focus-visible:ring-brand-dark/20 px-6"
                 />
 
-                {/* --- NOVO CAMPO DE SELEÇÃO DE PERFIL --- */}
+                {/* --- SELEÇÃO DE PERFIL --- */}
                 <div className="pt-2">
                     <label className="text-xs text-gray-500 ml-4 font-bold uppercase">Tipo de Perfil (Demo)</label>
-                    <Select onValueChange={handleSelectChange} defaultValue="CITIZEN">
+                    <Select onValueChange={handleProfileChange} defaultValue="CITIZEN">
                         <SelectTrigger className="h-12 w-full rounded-full bg-white border-0 shadow-sm text-gray-700 px-6 focus:ring-brand-dark/20">
                             <SelectValue placeholder="Selecione o perfil" />
                         </SelectTrigger>
@@ -156,6 +171,25 @@ export default function RegisterPage() {
                         </SelectContent>
                     </Select>
                 </div>
+
+                {/* --- SELEÇÃO DE INSTITUIÇÃO (Condicional) --- */}
+                {formData.profileType === "MANAGER" && (
+                    <div className="pt-2 animate-in slide-in-from-top-2 duration-300">
+                        <label className="text-xs text-gray-500 ml-4 font-bold uppercase">Instituição / Órgão</label>
+                        <Select onValueChange={handleInstitutionChange}>
+                            <SelectTrigger className="h-12 w-full rounded-full bg-white border-0 shadow-sm text-gray-700 px-6 focus:ring-brand-dark/20">
+                                <SelectValue placeholder={isLoadingInst ? "Carregando..." : "Selecione a instituição"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {institutions?.map((inst) => (
+                                    <SelectItem key={inst.id} value={String(inst.id)}>
+                                        {inst.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
                 {/* --------------------------------------- */}
 
                 {/* Botão Cadastrar */}
@@ -180,7 +214,7 @@ export default function RegisterPage() {
                 </div>
             </div>
 
-            {/* 5. Botões Sociais (Reutilizados para manter padrão) */}
+            {/* 5. Botões Sociais (SEUS SVGs ORIGINAIS) */}
             <div className="flex gap-4 w-full max-w-sm justify-center mb-8">
                 {/* Facebook */}
                 <button className="h-14 w-20 bg-white rounded-xl shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
