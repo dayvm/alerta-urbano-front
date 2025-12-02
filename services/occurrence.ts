@@ -12,6 +12,7 @@ export interface Occurrence {
   categoryName: string;
   authorName: string;            // Adicionei baseado no seu JSON
   responsibleInstitutionName?: string; // Adicionei (pode ser null)
+  photoUrl?: string;
 }
 
 export const occurrenceService = {
