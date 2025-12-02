@@ -38,4 +38,9 @@ export const occurrenceService = {
     const { data } = await api.post("/occurrences", payload);
     return data;
   },
+  getByAuthor: async (userId: number) => {
+    // O Java espera o parâmetro como query param: ?userId=1
+    const { data } = await api.get<Occurrence[]>(`/occurrences?userId=${userId}`);
+    return data;
+  },
 };
