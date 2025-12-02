@@ -75,10 +75,15 @@ function NewReportForm() {
 
       await occurrenceService.create(payload);
 
-      // --- LINHA MÁGICA: Força o mapa a atualizar ---
+      // 1. Atualiza o Mapa Geral (Home)
       queryClient.invalidateQueries({ queryKey: ["occurrences"] });
-      // ----------------------------------------------
 
+      // 2. Atualiza a lista de "Meus Reports"
+      queryClient.invalidateQueries({ queryKey: ["my-reports"] });
+
+      // 3. Atualiza a lista da Instituição (caso seja Gestor)
+      queryClient.invalidateQueries({ queryKey: ["institution-reports"] });
+      
       alert("Report criado com sucesso!");
       router.push("/home"); // Volta pro mapa
 
