@@ -8,12 +8,26 @@ export const api = axios.create({
 // --- INTERCEPTADOR DE REQUISIÇÃO (O Pulo do Gato) ---
 // Antes de qualquer requisição sair do front, esse código roda.
 api.interceptors.request.use((config) => {
-  // 1. Tenta pegar o token salvo no navegador
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  // 1. Tenta pegar o objeto completo do Zustand
+  if (typeof window !== "undefined") {
+    const storageData = localStorage.getItem("auth-storage"); // <--- CHAVE CORRETA
 
-  // 2. Se tiver token, adiciona o cabeçalho "Authorization: Bearer ..."
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    if (storageData) {
+      try {
+        // 2. Faz o parse do JSON (porque o Zustand salva como string)
+        const parsedData = JSON.parse(storageData);
+        
+        // 3. Pega o token de dentro do estado
+        const token = parsedData.state?.token;
+
+        // 4. Se o token existir, injeta no header
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        console.error("Erro ao ler token do storage:", error);
+      }
+    }
   }
 
   return config;
