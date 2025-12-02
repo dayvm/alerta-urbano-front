@@ -15,6 +15,16 @@ export interface Occurrence {
   photoUrl?: string;
 }
 
+export interface CreateOccurrencePayload {
+  title: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  addressText: string;
+  categoryId: number;
+  authorId: number; // <--- O Java pediu isso explicitamente
+}
+
 export const occurrenceService = {
   getAll: async () => {
     const { data } = await api.get<Occurrence[]>("/occurrences");
@@ -22,6 +32,10 @@ export const occurrenceService = {
   },
   getById: async (id: number) => {
     const { data } = await api.get<Occurrence>(`/occurrences/${id}`);
+    return data;
+  },
+  create: async (payload: CreateOccurrencePayload) => {
+    const { data } = await api.post("/occurrences", payload);
     return data;
   },
 };
