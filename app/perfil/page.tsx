@@ -90,16 +90,6 @@ export default function ProfilePage() {
 
       {/* 3. Menu de Opções */}
       <div className="flex-1 px-6 pb-8 space-y-2">
-        
-        {/* Item: Meus Dados */}
-        <Link href="/meus-dados" className="w-full block">
-          <button className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-sm active:scale-95 transition-transform border border-transparent hover:border-gray-200">
-            <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-              <User className="h-5 w-5" />
-            </div>
-            <span className="text-gray-700 font-bold flex-1 text-left">Meus Dados</span>
-          </button>
-        </Link>
 
         {/* Item: Meus Dados */}
         <Link href="/meus-dados" className="w-full block">
