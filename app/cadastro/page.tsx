@@ -16,6 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -76,7 +77,7 @@ export default function RegisterPage() {
 
             await authService.register(payload);
 
-            alert(`Cadastro realizado com sucesso!`);
+            toast.success(`Cadastro realizado com sucesso!`);
             router.push("/login");
         } catch (err: any) {
             console.error(err);
