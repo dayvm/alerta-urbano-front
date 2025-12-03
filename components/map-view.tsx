@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet"; // <--- Adicionei useMap
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { ArrowRight, Loader2, ExternalLink } from "lucide-react";
 import { useOccurrences } from "@/hooks/use-occurrences";
-import Link from "next/link"; // <--- Importante
+import Link from "next/link";
+import { getImageUrl } from "@/lib/utils"; // <--- Importante para as imagens
 
 // --- CONFIGURAÇÃO DE ÍCONES (Mantém igual) ---
 const iconDefault = L.icon({
@@ -28,6 +29,20 @@ const iconNew = L.icon({
   shadowSize: [41, 41]
 });
 
+// --- NOVO COMPONENTE: Controlador de Voo ---
+// Esse componente invisível serve apenas para mover a câmera quando a props muda
+function MapController({ coords }: { coords?: { lat: number; lng: number } | null }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (coords) {
+      map.flyTo([coords.lat, coords.lng], 16, { duration: 2 }); // Zoom 16, Animação de 2s
+    }
+  }, [coords, map]);
+
+  return null;
+}
+
 function ClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
   useMapEvents({
     click(e) {
@@ -37,21 +52,13 @@ function ClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) =
   return null;
 }
 
-export default function MapView() {
+// Props agora aceita flyToLocation opcional
+export default function MapView({ flyToLocation }: { flyToLocation?: { lat: number; lng: number } | null }) {
   const router = useRouter();
-
-  // 1. Pega o usuário para saber se é Gestor
   const user = useAuthStore((state) => state.user);
 
-  // 2. Define o filtro: 
-  // Se for MANAGER e tiver ID, usa o ID. Senão, manda undefined (mostra tudo).
-  const filterId = (user?.profileType === "MANAGER" && user?.institutionId) 
-    ? user.institutionId 
-    : undefined;
-
-  // 3. Passa o filtro para o Hook atualizado
+  const filterId = (user?.profileType === "MANAGER" && user?.institutionId) ? user.institutionId : undefined;
   const { data: occurrences = [], isLoading } = useOccurrences(filterId);
-  
   const [newReportLocation, setNewReportLocation] = useState<{lat: number, lng: number} | null>(null);
 
   const handleCreateReport = () => {
@@ -83,29 +90,27 @@ export default function MapView() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        {/* --- AQUI: Injeta o Controlador --- */}
+        <MapController coords={flyToLocation} />
         <ClickHandler onMapClick={(lat, lng) => setNewReportLocation({ lat, lng })} />
 
         {/* PINOS EXISTENTES */}
         {occurrences.map((report) => (
-          <Marker 
-            key={report.id} 
-            position={[report.latitude, report.longitude]} 
-            icon={iconDefault}
-            // REMOVI O eventHandlers={{ click... }} DAQUI PARA NÃO REDIRECIONAR DIRETO
-          >
+          <Marker key={report.id} position={[report.latitude, report.longitude]} icon={iconDefault}>
              <Popup minWidth={200}>
                 <div className="text-center font-sans p-1">
-                    {/* Título */}
-                    <strong className="text-brand-dark block text-sm mb-1 leading-tight">
-                        {report.title}
-                    </strong>
-                    
-                    {/* Categoria */}
+                  {report.photoUrl && (
+                      <img 
+                        src={getImageUrl(report.photoUrl)} 
+                        alt="Foto da ocorrência"
+                        className="w-full h-24 object-cover rounded-md mb-2 bg-gray-100"
+                        onError={(e) => e.currentTarget.style.display = 'none'} // Esconde se der erro
+                      />
+                    )}
+                    <strong className="text-brand-dark block text-sm mb-1 leading-tight">{report.title}</strong>
                     <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full text-gray-600 border border-gray-200 inline-block mb-2">
                         {report.categoryName}
                     </span>
-
-                    {/* Botão Ver Detalhes */}
                     <Link href={`/report/${report.id}`} className="block w-full">
                         <button className="w-full bg-brand-dark text-white text-xs py-1.5 px-3 rounded-md font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
                             Ver Detalhes <ExternalLink size={10} />
@@ -122,10 +127,7 @@ export default function MapView() {
             <Popup offset={[0, -30]} minWidth={200} closeButton={false} autoPan={true}>
               <div className="flex flex-col gap-2 p-1 text-center font-sans">
                 <span className="font-bold text-brand-dark text-sm">Novo local selecionado</span>
-                <button 
-                  onClick={handleCreateReport}
-                  className="mt-2 bg-[#1abeb3] text-white px-3 py-2 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform flex items-center justify-center gap-1"
-                >
+                <button onClick={handleCreateReport} className="mt-2 bg-[#1abeb3] text-white px-3 py-2 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform flex items-center justify-center gap-1">
                   Criar Report Aqui <ArrowRight size={14} />
                 </button>
               </div>

@@ -1,10 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Menu, Search, Mic, MapPin, Shield } from "lucide-react";
+import { useState } from "react"; // <--- useState para controlar a busca
+import { Menu, Search, Mic, MapPin, Shield, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { useAuthStore } from "@/store/auth-store"; // <--- ADICIONE ISSO
+import { useAuthStore } from "@/store/auth-store";
+import { toast } from "sonner"; // <--- Para avisar se não achar
 
 // Importação Dinâmica do Mapa
 const MapView = dynamic(() => import("@/components/map-view"), {
@@ -13,7 +15,47 @@ const MapView = dynamic(() => import("@/components/map-view"), {
 });
 
 export default function HomePage() {
-  const user = useAuthStore((state) => state.user); // <--- ADICIONE ISSO
+  const user = useAuthStore((state) => state.user);
+
+  // Estados da Busca
+  const [searchText, setSearchText] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [flyToLocation, setFlyToLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  // Função de Busca (Nominatim API)
+  const handleSearch = async () => {
+    if (!searchText.trim()) return;
+
+    setIsSearching(true);
+    try {
+        // Busca OpenStreetMap (Grátis)
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchText)}&limit=1`);
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lng = parseFloat(data[0].lon);
+            
+            // Manda o mapa voar para lá
+            setFlyToLocation({ lat, lng });
+        } else {
+            toast.error("Endereço não encontrado.");
+        }
+    } catch (error) {
+        console.error(error);
+        toast.error("Erro na busca.");
+    } finally {
+        setIsSearching(false);
+    }
+  };
+
+  // Busca ao apertar ENTER
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+        handleSearch();
+    }
+  };
+
   return (
     <main className="min-h-screen w-full bg-splash-bg flex flex-col items-center overflow-hidden">
 
@@ -29,13 +71,26 @@ export default function HomePage() {
 
           <div className="flex-1 relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 bg-transparent border-r border-gray-300 pr-2">
-              <Mic className="h-5 w-5 text-brand-dark" />
+              <Mic className="h-5 w-5 text-brand-dark opacity-50" />
             </div>
+            
+            {/* Input de Busca Funcional */}
             <Input 
-              placeholder="Buscar endereço..." 
-              className="h-12 w-full rounded-full pl-14 pr-10 bg-white border-0 text-gray-700 placeholder:text-gray-400 focus-visible:ring-offset-0"
+              placeholder="Buscar endereço (ex: Marco Zero)..." 
+              className="h-12 w-full rounded-full pl-14 pr-12 bg-white border-0 text-gray-700 placeholder:text-gray-400 focus-visible:ring-offset-0 shadow-inner"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isSearching}
             />
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-dark" />
+
+            {/* Ícone de Busca (Clicável ou Spinner) */}
+            <button 
+                onClick={handleSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            >
+                {isSearching ? <Loader2 className="h-5 w-5 text-brand-dark animate-spin" /> : <Search className="h-5 w-5 text-brand-dark" />}
+            </button>
           </div>
 
         </div>
@@ -44,16 +99,15 @@ export default function HomePage() {
       {/* 2. Área do Conteúdo */}
       <div className="w-full flex-1 px-4 mt-4 pb-4 z-10 flex flex-col relative">
         
-        {/* Container do Mapa com ALTURA FIXA (Fundamental para o Leaflet) */}
+        {/* Container do Mapa */}
         <div className="w-full h-[70vh] bg-white rounded-2xl shadow-xl p-1 relative overflow-hidden">
-          <MapView />
+          {/* Passamos o flyToLocation para o mapa */}
+          <MapView flyToLocation={flyToLocation} />
         </div>
 
-        {/* 3. Card Flutuante (Condicional: Gestor ou Cidadão) */}
+        {/* 3. Card Flutuante (Condicional) */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-sm pointer-events-none z-[400]">
-          
           {user?.profileType === "MANAGER" ? (
-            // --- VISÃO DO GESTOR (Escuro/Sério) ---
             <div className="bg-brand-dark text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 duration-700">
               <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
                 <Shield className="h-6 w-6 text-white" fill="currentColor" />
@@ -66,7 +120,6 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            // --- VISÃO DO CIDADÃO (Turquesa/Convite) ---
             <div className="bg-[#1abeb3] text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 duration-700">
               <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
                 <MapPin className="h-6 w-6 text-white" fill="currentColor" />
@@ -79,7 +132,6 @@ export default function HomePage() {
               </div>
             </div>
           )}
-
         </div>
 
       </div>
