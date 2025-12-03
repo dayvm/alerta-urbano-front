@@ -1,70 +1,70 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, MapPin, Camera, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Camera, Plus, Loader2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthStore } from "@/store/auth-store";
 import { useCategories } from "@/hooks/use-categories";
-import { useInstitutions } from "@/hooks/use-institutions"; // <--- NOVO IMPORT
+import { useInstitutions } from "@/hooks/use-institutions";
 import { occurrenceService } from "@/services/occurrence";
+import { attachmentService } from "@/services/attachment"; // <--- NOVO
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-// Componente interno para ler URL (Regra do Next.js)
 function NewReportForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
   
-  // Lê coordenadas da URL
+  // Refs e Params
+  const fileInputRef = useRef<HTMLInputElement>(null); // <--- Ref para o input invisível
   const latParam = searchParams.get("lat");
   const lngParam = searchParams.get("lng");
 
-  // Busca dados do banco
+  // Dados do Banco
   const { data: categories = [], isLoading: loadingCategories } = useCategories();
-  const { data: institutions = [], isLoading: loadingInst } = useInstitutions(); // <--- BUSCANDO INSTITUIÇÕES
+  const { data: institutions = [], isLoading: loadingInst } = useInstitutions();
 
-  // Estados do Formulário
+  // Estados
   const [formData, setFormData] = useState({
     title: "",
-    address: "", // O Java pede addressText
+    address: "",
     description: "",
     categoryId: "",
-    institutionId: "", // <--- NOVO CAMPO
+    institutionId: "",
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // <--- Estado da Foto
   const [loading, setLoading] = useState(false);
 
+  // Handler para selecionar arquivo
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Validação básica de tamanho (ex: 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("A imagem deve ter no máximo 5MB.");
+        return;
+      }
+      setSelectedFile(file);
+      toast.info("Foto selecionada!");
+    }
+  };
+
   const handleSubmit = async () => {
-    // Validações
-    if (!user?.id) {
-        toast.success("Erro: Usuário não identificado. Faça login novamente.");
-        return;
-    }
-    if (!latParam || !lngParam) {
-        toast.success("Erro: Localização não detectada. Volte ao mapa e selecione um local.");
-        return;
-    }
-    if (!formData.title || !formData.categoryId) {
-        toast.success("Preencha o título e o tipo de problema.");
-        return;
-    }
+    if (!user?.id) return toast.error("Erro: Usuário não identificado.");
+    if (!latParam || !lngParam) return toast.error("Localização não detectada.");
+    if (!formData.title || !formData.categoryId) return toast.error("Preencha título e categoria.");
 
     setLoading(true);
 
     try {
-      // Monta o payload exato que o Java pediu
+      // 1. CRIA O REPORT PRIMEIRO
       const payload = {
         title: formData.title,
         description: formData.description,
@@ -73,25 +73,36 @@ function NewReportForm() {
         addressText: formData.address || "Localização selecionada no mapa",
         categoryId: Number(formData.categoryId),
         authorId: Number(user.id),
-        // Envia NULL se estiver vazio, senão envia o número
         responsibleInstitutionId: formData.institutionId ? Number(formData.institutionId) : null
       };
 
-      console.log("Enviando:", payload);
+      // Atenção: O create retorna o objeto criado (precisamos do ID dele)
+      const newOccurrence = await occurrenceService.create(payload);
+      console.log("Report criado, ID:", newOccurrence.id);
 
-      await occurrenceService.create(payload);
+      // 2. SE TIVER FOTO, FAZ O UPLOAD VINCULANDO AO ID DO REPORT
+      if (selectedFile && newOccurrence.id) {
+        try {
+            await attachmentService.upload(selectedFile, newOccurrence.id);
+            toast.success("Foto enviada com sucesso!");
+        } catch (uploadError) {
+            console.error("Erro no upload da imagem:", uploadError);
+            toast.warning("O report foi criado, mas houve erro ao enviar a foto.");
+        }
+      } else {
+        toast.success("Report criado com sucesso!");
+      }
 
-      // Invalida caches para atualizar listas em todo o app
-      queryClient.invalidateQueries({ queryKey: ["occurrences"] });       // Mapa Geral
-      queryClient.invalidateQueries({ queryKey: ["my-reports"] });        // Histórico Pessoal
-      queryClient.invalidateQueries({ queryKey: ["institution-reports"] }); // Lista do Gestor
+      // 3. Atualiza caches e redireciona
+      queryClient.invalidateQueries({ queryKey: ["occurrences"] });
+      queryClient.invalidateQueries({ queryKey: ["my-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["institution-reports"] });
 
-      toast.success("Report criado com sucesso!");
-      router.push("/home"); // Volta pro mapa
+      router.push("/home");
 
     } catch (error) {
       console.error("Erro ao criar:", error);
-      toast.success("Erro ao enviar report. Tente novamente.");
+      toast.error("Erro ao enviar report.");
     } finally {
       setLoading(false);
     }
@@ -100,96 +111,93 @@ function NewReportForm() {
   return (
       <div className="flex-1 p-6 space-y-5 pb-10">
         
-        {/* Aviso de Local (Visual Feedback) */}
+        {/* Input Invisível para Arquivo */}
+        <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileSelect} 
+            accept="image/*" 
+            className="hidden" 
+        />
+
         <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-center gap-2 text-sm text-blue-800">
             <MapPin size={16} />
-            <span>
-               Coordenadas: {parseFloat(latParam || "0").toFixed(5)}, {parseFloat(lngParam || "0").toFixed(5)}
-            </span>
+            <span>Coordenadas: {parseFloat(latParam || "0").toFixed(4)}, {parseFloat(lngParam || "0").toFixed(4)}</span>
         </div>
 
-        {/* Tipo de Problema (Select Dinâmico) */}
         <div className="space-y-2">
           <label className="text-brand-dark font-bold text-lg">Tipo de problema</label>
           <Select onValueChange={(val) => setFormData({...formData, categoryId: val})}>
-            <SelectTrigger className="h-12 w-full rounded-xl bg-white border-0 shadow-sm text-gray-700 focus:ring-brand-dark/20">
+            <SelectTrigger className="h-12 w-full rounded-xl bg-white border-0 shadow-sm text-gray-700">
               <SelectValue placeholder={loadingCategories ? "Carregando..." : "Selecione"} />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={String(cat.id)}>
-                      {cat.name}
-                  </SelectItem>
-              ))}
+              {categories.map((cat) => <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
 
-        {/* --- NOVO: Seleção de Instituição --- */}
         <div className="space-y-2">
-          <label className="text-brand-dark font-bold text-lg">Instituição Responsável <span className="text-sm font-normal text-gray-400">(Opcional)</span></label>
+          <label className="text-brand-dark font-bold text-lg">Instituição (Opcional)</label>
           <Select onValueChange={(val) => setFormData({...formData, institutionId: val})}>
-            <SelectTrigger className="h-12 w-full rounded-xl bg-white border-0 shadow-sm text-gray-700 focus:ring-brand-dark/20">
-              <SelectValue placeholder={loadingInst ? "Carregando..." : "Selecione quem resolve"} />
+            <SelectTrigger className="h-12 w-full rounded-xl bg-white border-0 shadow-sm text-gray-700">
+              <SelectValue placeholder="Selecione quem resolve" />
             </SelectTrigger>
             <SelectContent>
-              {institutions.map((inst) => (
-                  <SelectItem key={inst.id} value={String(inst.id)}>
-                      {inst.name}
-                  </SelectItem>
-              ))}
+              {institutions.map((inst) => <SelectItem key={inst.id} value={String(inst.id)}>{inst.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
-        {/* ----------------------------------- */}
 
-        {/* Título */}
         <div className="space-y-2">
           <label className="text-brand-dark font-bold text-lg">Título</label>
           <Input 
-            placeholder="Ex: Buraco perigoso"
-            className="h-12 rounded-xl bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400"
-            value={formData.title}
-            onChange={(e) => setFormData({...formData, title: e.target.value})}
+            className="h-12 rounded-xl bg-white border-0 shadow-sm"
+            value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})}
           />
         </div>
 
-        {/* Endereço Manual */}
         <div className="space-y-2">
-          <label className="text-brand-dark font-bold text-lg">Endereço (Opcional)</label>
+          <label className="text-brand-dark font-bold text-lg">Endereço (Ref)</label>
           <Input 
-            placeholder="Ex: Rua da Aurora, perto do nº 500"
-            className="h-12 rounded-xl bg-white border-0 shadow-sm text-gray-700 placeholder:text-gray-400"
-            value={formData.address}
-            onChange={(e) => setFormData({...formData, address: e.target.value})}
+            className="h-12 rounded-xl bg-white border-0 shadow-sm"
+            value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})}
           />
         </div>
 
-        {/* Descrição */}
         <div className="space-y-2">
-          <label className="text-brand-dark font-bold text-lg">Descrição do problema</label>
+          <label className="text-brand-dark font-bold text-lg">Descrição</label>
           <Textarea 
-            placeholder="Descreva detalhes..."
-            className="min-h-[120px] rounded-xl bg-white border-0 shadow-sm text-gray-700 resize-none p-4 text-base"
-            value={formData.description}
-            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            className="min-h-[100px] rounded-xl bg-white border-0 shadow-sm resize-none p-4 text-base"
+            value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}
           />
         </div>
 
-        {/* Fotos (VISUAL APENAS - SEM LÓGICA POR ENQUANTO) */}
-        <div className="space-y-2 opacity-50 pointer-events-none">
-          <label className="text-brand-dark font-bold text-lg">Fotos (Desativado Demo)</label>
-          <div className="flex gap-4">
-            <button className="h-16 w-16 bg-white rounded-xl shadow-sm flex items-center justify-center border-2 border-transparent">
-               <Camera className="h-8 w-8 text-brand-dark" />
+        {/* FOTOS - IMPLEMENTADO */}
+        <div className="space-y-2">
+          <label className="text-brand-dark font-bold text-lg">Foto da Ocorrência</label>
+          
+          <div className="flex gap-4 items-center">
+            {/* Botão Câmera / Galeria */}
+            <button 
+                onClick={() => fileInputRef.current?.click()}
+                className={`h-16 w-16 rounded-xl shadow-sm flex items-center justify-center border-2 transition-all ${selectedFile ? 'bg-green-50 border-green-500' : 'bg-white border-transparent'}`}
+            >
+               {selectedFile ? <Check className="h-8 w-8 text-green-600" /> : <Camera className="h-8 w-8 text-brand-dark" />}
             </button>
-            <button className="h-16 w-16 bg-white rounded-xl shadow-sm flex items-center justify-center border-2 border-transparent">
-              <Plus className="h-8 w-8 text-brand-dark" />
-            </button>
+
+            {/* Visualização do Nome do Arquivo */}
+            {selectedFile ? (
+                <div className="flex-1 bg-white p-3 rounded-xl shadow-sm flex justify-between items-center">
+                    <span className="text-sm text-gray-600 truncate max-w-[150px]">{selectedFile.name}</span>
+                    <button onClick={() => setSelectedFile(null)} className="text-red-500 p-1"><X size={16} /></button>
+                </div>
+            ) : (
+                <span className="text-sm text-gray-400 italic">Nenhuma foto selecionada</span>
+            )}
           </div>
         </div>
 
-        {/* Botão de Ação */}
         <div className="pt-4">
            <Button 
             onClick={handleSubmit}
@@ -207,15 +215,12 @@ function NewReportForm() {
 export default function NewReportPage() {
   return (
     <main className="min-h-screen w-full bg-splash-bg flex flex-col">
-      {/* 1. Header Escuro com Botão Voltar */}
       <header className="w-full bg-brand-dark p-6 flex items-center gap-4 shadow-md sticky top-0 z-10">
         <Link href="/home">
           <ArrowLeft className="h-6 w-6 text-white cursor-pointer" />
         </Link>
         <h1 className="text-xl font-bold text-white">Criar report</h1>
       </header>
-
-      {/* Conteúdo com Suspense para carregar parâmetros da URL */}
       <Suspense fallback={<div className="p-10 text-center">Carregando formulário...</div>}>
          <NewReportForm />
       </Suspense>

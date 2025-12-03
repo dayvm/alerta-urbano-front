@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query"; // <--- Importante
 import { occurrenceService } from "@/services/occurrence"; // <--- Importante
 import { toast } from "sonner";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper de Status
 const statusMap: Record<string, { label: string; color: string }> = {
@@ -72,7 +73,7 @@ export default function ReportDetailsPage() {
   if (isLoading) return <div className="min-h-screen flex justify-center items-center"><Loader2 className="animate-spin" /></div>;
   if (isError || !data) return <div>Erro ao carregar report.</div>;
 
-  const displayImage = data.photoUrl || "/um-report-fallback.png";
+  const displayImage = data.photoUrl ? `${API_BASE_URL}${data.photoUrl}` : "/um-report-fallback.png";
   const statusInfo = statusMap[data.currentStatus] || statusMap.OPEN;
   const cardColorClass = cardStatusMap[data.currentStatus] || "bg-[#1abeb3]";
 
@@ -105,7 +106,7 @@ export default function ReportDetailsPage() {
 
         {/* Imagem */}
         <div className="w-full aspect-video relative rounded-2xl overflow-hidden shadow-sm border-2 border-white">
-            <Image src={displayImage} alt="Foto" fill className="object-cover" />
+            <Image src={displayImage} alt="Foto" fill className="object-fill" />
         </div>
 
         {/* Detalhes Texto */}
