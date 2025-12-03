@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth-store";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -38,7 +39,19 @@ function ClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) =
 
 export default function MapView() {
   const router = useRouter();
-  const { data: occurrences = [], isLoading } = useOccurrences();
+
+  // 1. Pega o usuário para saber se é Gestor
+  const user = useAuthStore((state) => state.user);
+
+  // 2. Define o filtro: 
+  // Se for MANAGER e tiver ID, usa o ID. Senão, manda undefined (mostra tudo).
+  const filterId = (user?.profileType === "MANAGER" && user?.institutionId) 
+    ? user.institutionId 
+    : undefined;
+
+  // 3. Passa o filtro para o Hook atualizado
+  const { data: occurrences = [], isLoading } = useOccurrences(filterId);
+  
   const [newReportLocation, setNewReportLocation] = useState<{lat: number, lng: number} | null>(null);
 
   const handleCreateReport = () => {
