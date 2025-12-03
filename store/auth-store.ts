@@ -1,27 +1,22 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-// 1. Tipagem do Usuário (Igual ao DTO do Java)
 export interface User {
   id?: number;
   name: string;
   email: string;
-  profileType: string; // "CIDADAO" | "GESTOR"
+  profileType: string; // "CITIZEN" | "MANAGER" | "ADMIN"
   institutionId?: number;
   institutionName?: string;
 }
 
-// 2. Tipagem do Estado
 interface AuthState {
   token: string | null;
   user: User | null;
-  
-  // Ações
   login: (token: string, user: User) => void;
   logout: () => void;
 }
 
-// 3. Criação da Store
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -33,12 +28,18 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        // 1. Limpa o estado interno
         set({ token: null, user: null });
-        localStorage.removeItem("token"); // Limpeza extra por segurança
+        
+        // 2. Limpa o localStorage forçadamente
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("auth-storage");
+            localStorage.removeItem("token"); // Caso tenha sobrado lixo antigo
+        }
       },
     }),
     {
-      name: "auth-storage", // Nome da chave que vai aparecer no localStorage
+      name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
     }
   )
