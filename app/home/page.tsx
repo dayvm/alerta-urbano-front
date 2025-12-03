@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Menu, Search, Mic, MapPin } from "lucide-react";
+import { Menu, Search, Mic, MapPin, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store"; // <--- ADICIONE ISSO
@@ -49,22 +49,38 @@ export default function HomePage() {
           <MapView />
         </div>
 
-        {/* 3. Card de Instrução Flutuante (SÓ APARECE SE NÃO FOR GESTOR) */}
-        {user?.profileType !== "MANAGER" && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-sm pointer-events-none z-[400]">
-              <div className="bg-[#1abeb3] text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 duration-700">
-                <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
-                  <MapPin className="h-6 w-6 text-white" fill="currentColor" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg leading-tight">Vamos começar?</h3>
-                  <p className="text-sm text-white/90 leading-tight mt-1">
-                    Toque em qualquer lugar do mapa para criar um report.
-                  </p>
-                </div>
+        {/* 3. Card Flutuante (Condicional: Gestor ou Cidadão) */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-sm pointer-events-none z-[400]">
+          
+          {user?.profileType === "MANAGER" ? (
+            // --- VISÃO DO GESTOR (Escuro/Sério) ---
+            <div className="bg-brand-dark text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 duration-700">
+              <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
+                <Shield className="h-6 w-6 text-white" fill="currentColor" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg leading-tight">Modo Gestão</h3>
+                <p className="text-sm text-white/90 leading-tight mt-1">
+                  Visualizando ocorrências vinculadas à <strong>{user.institutionName || "sua instituição"}</strong>.
+                </p>
               </div>
             </div>
-        )}
+          ) : (
+            // --- VISÃO DO CIDADÃO (Turquesa/Convite) ---
+            <div className="bg-[#1abeb3] text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 duration-700">
+              <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
+                <MapPin className="h-6 w-6 text-white" fill="currentColor" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg leading-tight">Vamos começar?</h3>
+                <p className="text-sm text-white/90 leading-tight mt-1">
+                  Toque em qualquer lugar do mapa para criar um report.
+                </p>
+              </div>
+            </div>
+          )}
+
+        </div>
 
       </div>
     </main>
