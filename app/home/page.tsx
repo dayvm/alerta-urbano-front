@@ -1,39 +1,38 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Menu, Search, Mic, Map as MapIcon, User, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Menu, Search, Mic, MapPin, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { useAuthStore } from "@/store/auth-store"; // <--- ADICIONE ISSO
 
-// Importação Dinâmica do Mapa (CRUCIAL: Evita erro "window is not defined")
+// Importação Dinâmica do Mapa
 const MapView = dynamic(() => import("@/components/map-view"), {
   loading: () => <div className="w-full h-full bg-slate-200 animate-pulse rounded-xl flex items-center justify-center text-slate-400">Carregando mapa...</div>,
-  ssr: false, // Desabilita renderização no servidor para este componente
+  ssr: false,
 });
 
 export default function HomePage() {
+  const user = useAuthStore((state) => state.user); // <--- ADICIONE ISSO
   return (
-    <main className="min-h-screen w-full bg-splash-bg flex flex-col items-center">
+    <main className="min-h-screen w-full bg-splash-bg flex flex-col items-center overflow-hidden">
 
       {/* 1. Header Escuro */}
-      <header className="w-full bg-brand-dark rounded-b-[2rem] p-6 pb-8 shadow-lg z-10">
+      <header className="w-full bg-brand-dark rounded-b-[2rem] p-6 pb-8 shadow-lg z-20">
         <div className="flex items-center gap-3">
-
-          {/* Botão Menu (Hambúrguer) */}
+          
           <Link href="/perfil">
             <button className="h-12 w-12 bg-white rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-transform">
               <Menu className="h-6 w-6 text-brand-dark" />
             </button>
           </Link>
 
-          {/* Barra de Pesquisa */}
           <div className="flex-1 relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 bg-transparent border-r border-gray-300 pr-2">
               <Mic className="h-5 w-5 text-brand-dark" />
             </div>
-            <Input
-              placeholder="Escolha um endereço"
+            <Input 
+              placeholder="Buscar endereço..." 
               className="h-12 w-full rounded-full pl-14 pr-10 bg-white border-0 text-gray-700 placeholder:text-gray-400 focus-visible:ring-offset-0"
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-dark" />
@@ -43,46 +42,47 @@ export default function HomePage() {
       </header>
 
       {/* 2. Área do Conteúdo */}
-      <div className="w-full max-w-sm px-6 -mt-4 z-0 flex flex-col gap-6 pb-8">
-
-        {/* Container do Mapa */}
-        <div className="relative w-full h-64 bg-white rounded-xl shadow-md p-1">
-          {/* Componente do Mapa Leaflet */}
-          <div className="w-full h-full rounded-lg overflow-hidden relative">
-            <MapView />
-
-            {/* Botão Flutuante sobre o Mapa (Ícone de Mapa) */}
-            <div className="absolute top-3 left-3 bg-white/90 p-2 rounded-md shadow-sm z-[400] cursor-pointer">
-              <MapIcon className="h-5 w-5 text-brand-dark" />
-            </div>
-          </div>
+      <div className="w-full flex-1 px-4 mt-4 pb-4 z-10 flex flex-col relative">
+        
+        {/* Container do Mapa com ALTURA FIXA (Fundamental para o Leaflet) */}
+        <div className="w-full h-[70vh] bg-white rounded-2xl shadow-xl p-1 relative overflow-hidden">
+          <MapView />
         </div>
 
-        {/* Título da Seção */}
-        <h2 className="text-xl font-extrabold text-brand-dark text-center">
-          Meus Reports
-        </h2>
-
-        {/* Lista de Reports (Card #1) */}
-        <Link href="/report/1" className="w-full">
-          <div className="w-full bg-brand-dark rounded-2xl p-4 flex items-center gap-4 shadow-md text-white hover:bg-slate-800 transition-colors cursor-pointer">
-            <div className="h-10 w-10 border-2 border-white rounded-lg flex items-center justify-center">
-              <User className="h-6 w-6 text-white" />
+        {/* 3. Card Flutuante (Condicional: Gestor ou Cidadão) */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-sm pointer-events-none z-[400]">
+          
+          {user?.profileType === "MANAGER" ? (
+            // --- VISÃO DO GESTOR (Escuro/Sério) ---
+            <div className="bg-brand-dark text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 duration-700">
+              <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
+                <Shield className="h-6 w-6 text-white" fill="currentColor" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg leading-tight">Modo Gestão</h3>
+                <p className="text-sm text-white/90 leading-tight mt-1">
+                  Visualizando ocorrências vinculadas à <strong>{user.institutionName || "sua instituição"}</strong>.
+                </p>
+              </div>
             </div>
-            <span className="text-lg font-medium">Report #1</span>
-          </div>
-        </Link>
+          ) : (
+            // --- VISÃO DO CIDADÃO (Turquesa/Convite) ---
+            <div className="bg-[#1abeb3] text-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in slide-in-from-bottom-5 duration-700">
+              <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
+                <MapPin className="h-6 w-6 text-white" fill="currentColor" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg leading-tight">Vamos começar?</h3>
+                <p className="text-sm text-white/90 leading-tight mt-1">
+                  Toque em qualquer lugar do mapa para criar um report.
+                </p>
+              </div>
+            </div>
+          )}
 
-        {/* Botão de Ação Principal (Turquesa) */}
-        <Link href="/novo-report" className="w-full mt-2">
-          <Button
-            className="w-full h-14 rounded-full bg-[#1abeb3] hover:bg-[#17a299] text-white font-bold text-lg shadow-lg flex items-center justify-center gap-2"
-          >
-            Abrir Novo Report
-          </Button>
-        </Link>
+        </div>
 
       </div>
-    </main>
-  );
+    </main>
+  );
 }
