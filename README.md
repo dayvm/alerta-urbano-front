@@ -2,7 +2,7 @@
 
 Projeto mobile-first desenvolvido para permitir que cidadãos reportem problemas urbanos (buracos, iluminação, lixo, etc.) em Recife/PE.
 
-## 🚀 Tecnologias Utilizadas
+## 1. Tecnologias Utilizadas
 
 * **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
 * **Estilização:** [Tailwind CSS v4](https://tailwindcss.com/)
@@ -10,7 +10,7 @@ Projeto mobile-first desenvolvido para permitir que cidadãos reportem problemas
 * **Mapas:** [React Leaflet](https://react-leaflet.js.org/) (OpenStreetMap)
 * **Ícones:** Lucide React
 
-## 📱 Status do Projeto
+## 2. Status do Projeto
 
 O projeto está em fase de desenvolvimento de Front-end (MVP Visual). As seguintes telas já foram implementadas:
 
@@ -20,7 +20,7 @@ O projeto está em fase de desenvolvimento de Front-end (MVP Visual). As seguint
 - [x] **Home (Dashboard):** Tela principal com mapa interativo (Leaflet) e listagem de reports.
 - [ ] **Novo Report:** Formulário para criar uma nova denúncia (Próximo passo).
 
-## 🛠️ Como Rodar o Projeto
+## 3. Como Rodar o Projeto
 
 ### Pré-requisitos
 * Node.js 18+ instalado.
@@ -47,7 +47,7 @@ O projeto está em fase de desenvolvimento de Front-end (MVP Visual). As seguint
 
 4.  Acesse `http://localhost:3000` no seu navegador (de preferência em modo de inspeção mobile).
 
-## 🎨 Estrutura de Temas (Tailwind v4)
+## 4. Estrutura de Temas (Tailwind v4)
 
 Este projeto utiliza a **versão 4 do Tailwind CSS**.
 As variáveis de cor e configurações de tema não estão em `tailwind.config.ts`, mas sim diretamente no arquivo CSS global.
@@ -57,7 +57,7 @@ As variáveis de cor e configurações de tema não estão em `tailwind.config.t
     * `--splash-bg`: `#E3E9F0` (Fundo Cinza-Azulado)
     * `--brand-dark`: `#0F172A` (Azul Escuro/Navy)
 
-## 🗺️ Notas sobre o Mapa
+## 5. Notas sobre o Mapa
 
 Utilizamos **Leaflet** em vez de Google Maps para evitar custos e necessidade de chaves de API nesta fase.
 O componente de mapa é carregado via `next/dynamic` (`ssr: false`) para evitar erros de renderização no servidor (o objeto `window` não existe no servidor).
