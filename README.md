@@ -28,24 +28,24 @@ O projeto está em fase de desenvolvimento de Front-end (MVP Visual). As seguint
 
 ### Instalação
 
-1.  Clone o repositório:
+a.  Clone o repositório:
     ```bash
     git clone <url-do-repositorio>
     ```
 
-2.  Instale as dependências:
+b.  Instale as dependências:
     ```bash
     npm install
     # ou
     pnpm install
     ```
 
-3.  Rode o servidor de desenvolvimento:
+c.  Rode o servidor de desenvolvimento:
     ```bash
     npm run dev
     ```
 
-4.  Acesse `http://localhost:3000` no seu navegador (de preferência em modo de inspeção mobile).
+d.  Acesse `http://localhost:3000` no seu navegador (de preferência em modo de inspeção mobile).
 
 ## 4. Estrutura de Temas (Tailwind v4)
 
