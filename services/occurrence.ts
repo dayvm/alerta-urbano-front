@@ -11,6 +11,7 @@ export interface Occurrence {
   createdAt: string; // <--- ADICIONE ESTA LINHA
   categoryName: string;
   authorName: string;            // Adicionei baseado no seu JSON
+  responsibleInstitutionId: number;
   responsibleInstitutionName?: string; // Adicionei (pode ser null)
   photoUrl?: string;
 }
@@ -22,7 +23,8 @@ export interface CreateOccurrencePayload {
   longitude: number;
   addressText: string;
   categoryId: number;
-  authorId: number; // <--- O Java pediu isso explicitamente
+  authorId: number;
+  responsibleInstitutionId: number | null; // <--- ADICIONE ISSO
 }
 
 export const occurrenceService = {
@@ -34,6 +36,10 @@ export const occurrenceService = {
     const { data } = await api.get<Occurrence>(`/occurrences/${id}`);
     return data;
   },
+  getByInstitution: async (institutionId: number) => {
+    const { data } = await api.get<Occurrence[]>(`/occurrences?institutionId=${institutionId}`);
+    return data;
+  },
   create: async (payload: CreateOccurrencePayload) => {
     const { data } = await api.post("/occurrences", payload);
     return data;
@@ -43,4 +49,9 @@ export const occurrenceService = {
     const { data } = await api.get<Occurrence[]>(`/occurrences?userId=${userId}`);
     return data;
   },
+  updateStatus: async (id: number, newStatus: string) => {
+    // O Java espera um Map<String, String> no body: { "currentStatus": "IN_PROGRESS" }
+    const { data } = await api.patch(`/occurrences/${id}/status`, { currentStatus: newStatus });
+    return data;
+  }
 };
