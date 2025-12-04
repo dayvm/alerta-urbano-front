@@ -11,6 +11,7 @@ export interface Occurrence {
   createdAt: string; // <--- ADICIONE ESTA LINHA
   categoryName: string;
   authorName: string;            // Adicionei baseado no seu JSON
+  authorId: number;
   responsibleInstitutionId: number;
   responsibleInstitutionName?: string; // Adicionei (pode ser null)
   photoUrl?: string;
@@ -53,5 +54,8 @@ export const occurrenceService = {
     // O Java espera um Map<String, String> no body: { "currentStatus": "IN_PROGRESS" }
     const { data } = await api.patch(`/occurrences/${id}/status`, { currentStatus: newStatus });
     return data;
-  }
+  },
+  delete: async (id: number) => {
+    await api.delete(`/occurrences/${id}`);
+  },
 };
