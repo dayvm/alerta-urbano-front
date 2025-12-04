@@ -107,3 +107,14 @@ Utilizamos **Leaflet** e **Nominatim API** (OpenStreetMap) para renderização e
 
 ---
 Desenvolvido como parte de um projeto acadêmico.
+
+## 👥 Equipe
+
+*  Ailton Santos
+*  Arthur Azevedo
+*  David Mendes
+*  Dayvson da Conceição
+*  Hallason Matias
+*  Julia Muniz
+*  Victor Paraizo
+*  Wilson Pereira
